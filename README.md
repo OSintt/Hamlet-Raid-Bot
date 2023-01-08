@@ -19,4 +19,4 @@
 # TypeScript Raid Bot
 ```js 
 <funcionalidades>
-command @ to raid discord servers
+command +nuke to raid discord servers
