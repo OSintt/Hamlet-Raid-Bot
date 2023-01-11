@@ -16,7 +16,20 @@
   </p>
 </div>
 
-# TypeScript Raid Bot
+# 🐹 Hamlet | TypeScript Raid Bot
 ```js 
-<funcionalidades>
+<functionalities>
 command +nuke to raid discord servers
+```
+
+# 🔧 Config
+· Enter `src/config/raid.config.ts` and enter your own configuration
+
+# 📦 Build 
+```zsh
+git clone https://github.com/OSintt/Hamlet-Raid-Bot
+cd Hamlet-Raid-Bot 
+npm install
+npm start
+```
+
