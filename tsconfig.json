@@ -1,19 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "outDir": "build",
-    "lib": ["esnext", "dom"],
+    "target": "ES2020",
     "module": "commonjs",
-    "moduleResolution": "node",
+    "lib": ["ES2020"],
+    "outDir": "build",
     "strict": true,
-    "jsx": "react",
-    "allowJs": true,
-    "sourceMap": true,
-    "inlineSources": true,
-    "types": ["node"],
-    "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true
+    "esModuleInterop": true,
+    "skipLibCheck": true,  // Opción que puede ayudar a evitar algunos errores de tipo
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/*.spec.ts"]
+  "exclude": ["node_modules"]
 }

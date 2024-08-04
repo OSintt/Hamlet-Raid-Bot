@@ -5,19 +5,20 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "start": "tsc && ./node_modules/node/bin/node build/index.js",
+    "start": "tsc && node build/index.js",
     "fm": "prettier --write ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/node": "^16.11.4",
-    "discord.js": "^12.5.3",
+    "@types/node": "^22.1.0",
+    "discord.js": "^14.15.3",
+    "discord.js-selfbot-v13": "^3.3.0",
+    "dotenv": "^16.4.5",
     "express": "^4.17.1",
-    "node": "^16.6.0",
     "prettier": "^2.4.1",
-    "reflect-metadata": "^0.1.13"
+    "typescript": "^5.5.4"
   },
   "devDependencies": {
     "@types/express": "^4.17.13",
