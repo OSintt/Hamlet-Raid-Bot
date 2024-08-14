@@ -2,7 +2,7 @@ import { RaidData } from './raid.interface';
 import "dotenv/config";
 export const raidData: RaidData = {
   icon: 'https://images-ext-1.discordapp.net/external/MNhTLpAjfnYRn-9ccT7G9xHytta5uOOt_FHpdQqiWfo/%3Fsize%3D2048/https/cdn.discordapp.com/icons/1093539713123623033/533cf23881e06906efe831be83573490.png?format=webp&quality=lossless&width=662&height=662',
-  message: 'Servidor Atacado por OSint!',
+  message: 'discord.gg/shabz?',
   invite: 'https://discord.gg/PxFDykkt',
   name: '/shabz',
   nuke_name: '/shabz',
