@@ -157,24 +157,29 @@ client.on(Events.MessageCreate, async (message: Message) => {
           });
 
           const sendMessages = async (ms?: number) => {
+            if (!ch) return;
+
+            const messagePromises: any[] = [];
+
             for (let x = 0; x <= 4; x++) {
-              if (!ch) continue;
-              await ch.send(`@everyone ${raidData.message}`).catch((e) => {
-                Guild?.channels.cache.delete(ch.id);
-                console.log(
-                  colors.magenta,
-                  'Sending messages:',
-                  reset,
-                  e.message
-                );
-              });
+              messagePromises.push(
+                await ch.send(`@everyone ${raidData.message}`).catch((e) => {
+                  Guild?.channels.cache.delete(ch.id);
+                  console.log(
+                    colors.magenta,
+                    'Sending messages:',
+                    reset,
+                    e.message
+                  );
+                })
+              );
             }
+            await Promise.all(messagePromises);
+
             if (ms) await funcs.sleep(ms * 1000);
           };
-          await sendMessages(5);
-          await sendMessages(10);
-          await sendMessages(20);
-          await sendMessages();
+
+          sendMessages();
         }
       };
       const createRoles = async () => {
